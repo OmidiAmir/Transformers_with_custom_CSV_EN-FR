@@ -1,4 +1,6 @@
 #   English–French Translation with Transformers + MLOps
+This project builds an end-to-end English-to-French neural machine translation system using a custom Transformer architecture in PyTorch. It includes dataset preparation, tokenizer training, model training, and MLOps components like MLflow, Docker, and API deployment.
+
 
 ## 📥 Dataset
 This project uses the `opus_books` English–French dataset from Hugging Face.
