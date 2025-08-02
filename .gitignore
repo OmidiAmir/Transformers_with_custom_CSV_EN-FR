@@ -1,0 +1,18 @@
+# Virtual environment
+venv/
+.env/
+
+# Datasets and CSV files
+data/
+*.csv
+
+# PyTorch checkpoints and artifacts
+*.pt
+*.ckpt
+runs/
+mlruns/
+
+# Cache and system files
+__pycache__/
+*.pyc
+.DS_Store
