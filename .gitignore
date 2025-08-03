@@ -3,8 +3,7 @@ venv/
 .env/
 
 # Datasets and CSV files
-data/
-*.csv
+data/*.csv
 
 # PyTorch checkpoints and artifacts
 *.pt
