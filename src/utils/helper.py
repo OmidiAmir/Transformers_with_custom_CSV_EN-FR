@@ -42,7 +42,7 @@ def get_or_build_tokenizer(ds, lang):
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
     return tokenizer
 
-def validate_model(model, validation_ds, tokenizer_src, tokenizer_tgt, config):
+def validate_model(model, validation_ds, tokenizer_src, tokenizer_tgt, config, log=True):
     model.eval()
     count = 0
     source_texts = []
@@ -116,3 +116,11 @@ def validate_model(model, validation_ds, tokenizer_src, tokenizer_tgt, config):
     print('\t\tCharacter Error Rate is: ', cer)
     print('\t\tWord Error Rate is:      ', wer)
     print('\t\tBlue score is:           ', bleu)
+
+    if log:
+        print('\n\n\t\t-----------------------------')
+        print('\t\tCharacter Error Rate is: ', cer)
+        print('\t\tWord Error Rate is:      ', wer)
+        print('\t\tBlue score is:           ', bleu)
+
+    return cer.item(), wer.item(), bleu.item()
