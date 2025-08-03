@@ -15,7 +15,24 @@ Saved to: data/opus_books_en_fr.csv
 ---
 
 ## 🔠 Tokenization
-_(Coming soon)_
+The project uses a custom WordLevel tokenizer (trained from scratch) for both English and French.
+
+To train and save the tokenizers:
+
+```bash
+python ./src/data/train_tokenizers.py
+````
+This will generate two files:
+- tokenizers/tokenizer_en.json
+- tokenizers/tokenizer_fr.json
+
+To verify the tokenizers work, run:
+
+```bash
+pytest tests/test_train_tokenizers.py
+```
+
+
 
 ## 🧠 Model
 _(Coming soon)_
