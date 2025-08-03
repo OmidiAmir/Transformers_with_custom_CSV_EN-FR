@@ -15,10 +15,46 @@ Saved to: data/opus_books_en_fr.csv
 ---
 
 ## 🔠 Tokenization
-_(Coming soon)_
+The project uses a custom WordLevel tokenizer (trained from scratch) for both English and French.
 
-## 🧠 Model
-_(Coming soon)_
+To train and save the tokenizers:
+
+```bash
+python ./src/data/train_tokenizers.py
+````
+This will generate two files:
+- tokenizers/tokenizer_en.json
+- tokenizers/tokenizer_fr.json
+
+To verify the tokenizers work, run:
+
+```bash
+pytest tests/test_train_tokenizers.py
+```
+
+
+
+## 🧠 Transformer Model
+This project implements a custom Transformer model from scratch based on the "Attention Is All You Need" paper.  
+It includes:
+
+- Multi-head self-attention mechanism
+- Sinusoidal positional encoding
+- Encoder and decoder layers with LayerNorm, residual connections, and dropout
+- Custom masking for source and target sequences
+
+The model is defined in `src/models/transformer_model.py`.
+
+To run the unit test:
+
+```bash
+pytest tests/test_transformer_model.py
+``` 
+The test checks:
+
+- Model instantiation
+- Forward pass with dummy data
+- Output shapes match expectations
 
 ## 🏋️‍♂️ Training
 _(Coming soon)_
