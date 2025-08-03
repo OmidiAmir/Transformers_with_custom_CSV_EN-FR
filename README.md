@@ -34,8 +34,27 @@ pytest tests/test_train_tokenizers.py
 
 
 
-## 🧠 Model
-_(Coming soon)_
+## 🧠 Transformer Model
+This project implements a custom Transformer model from scratch based on the "Attention Is All You Need" paper.  
+It includes:
+
+- Multi-head self-attention mechanism
+- Sinusoidal positional encoding
+- Encoder and decoder layers with LayerNorm, residual connections, and dropout
+- Custom masking for source and target sequences
+
+The model is defined in `src/models/transformer_model.py`.
+
+To run the unit test:
+
+```bash
+pytest tests/test_transformer_model.py
+``` 
+The test checks:
+
+- Model instantiation
+- Forward pass with dummy data
+- Output shapes match expectations
 
 ## 🏋️‍♂️ Training
 _(Coming soon)_
