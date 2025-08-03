@@ -148,9 +148,7 @@ class Transformer(nn.Module):
         tgt_mask = tgt_mask & nopeak_mask
         return src_mask, tgt_mask
 
-    def forward(self, src, tgt):
-        src_mask, tgt_mask = self.generate_mask(src, tgt)
-
+    def forward(self, src, tgt, src_mask, tgt_mask):
         src_embedded = self.dropout(self.positional_encoding(self.encoder_embedding(src)))
         tgt_embedded = self.dropout(self.positional_encoding(self.decoder_embedding(tgt)))
 
@@ -163,8 +161,8 @@ class Transformer(nn.Module):
             dec_output = dec_layer(dec_output, enc_output, src_mask, tgt_mask)
 
         output = self.fc(dec_output)
-
         return output, enc_output, dec_output
+
 
 
 
