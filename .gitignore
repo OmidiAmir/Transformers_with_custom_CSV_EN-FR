@@ -2,6 +2,14 @@
 venv/
 .env/
 
+# models 
+models/ 
+models/*.*
+
+# data
+data/ 
+*.csv
+
 # PyTorch checkpoints and artifacts
 *.pt
 *.ckpt
