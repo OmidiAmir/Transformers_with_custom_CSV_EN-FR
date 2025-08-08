@@ -2,9 +2,6 @@
 venv/
 .env/
 
-# Datasets and CSV files
-data/*.csv
-
 # PyTorch checkpoints and artifacts
 *.pt
 *.ckpt
