@@ -9,6 +9,7 @@ models/*.*
 # data
 data/ 
 *.csv
+*.fr
 
 # PyTorch checkpoints and artifacts
 *.pt
