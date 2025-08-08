@@ -8,7 +8,7 @@ class Config:
         self.currentPath = os.path.dirname(os.path.abspath(__file__))
 
         # Dataset
-        self.dataSetFileName = 'english_french_sentences.csv'
+        self.dataSetFileName = 'opus_books_en_fr.csv'
         self.sourceLang = 'en'
         self.targetLang = 'fr'
         self.trainPercentage = 0.9
@@ -19,7 +19,7 @@ class Config:
         self.num_layers = 6
         self.d_ff = 2048
         self.dropout = 0.1
-        self.max_seq_length = 100
+        self.max_seq_length = 384
 
         # Training settings
         self.trainBatchSize = 8

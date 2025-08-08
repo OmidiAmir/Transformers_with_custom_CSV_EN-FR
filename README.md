@@ -57,7 +57,18 @@ The test checks:
 - Output shapes match expectations
 
 ## 🏋️‍♂️ Training
-_(Coming soon)_
+Once the data and tokenizer are ready, you can start training the Transformer model:
+
+```bash
+python src/training/train.py
+```
+
+This will:
+- Train the Transformer model for N epochs
+- Save model checkpoints to ./model/
+- Run validation using BLEU, CER, and WER metrics
+
+
 
 ## 📊 Experiment Tracking (MLflow)
 _(Coming soon)_

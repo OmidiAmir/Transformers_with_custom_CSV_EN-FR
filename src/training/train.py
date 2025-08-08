@@ -1,33 +1,42 @@
-
-from transformerModel import Transformer
-import helper
-
 import torch
 import torch.nn as nn
 import torch.utils.data as data
 import os
-# from pathlib import Path
 from tqdm import tqdm
+import mlflow
+import mlflow.pytorch
+
+from src.config import config
+from src.models.transformer_model import Transformer
+from src.data.dataloader import get_data_ready
+from src.utils.helper import validate_model
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", device)
 
-### comfiguration parameters
-from src.config import config
-
 # Data preparation
-train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = helper.get_data_ready(config)
+train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_data_ready(config)
 
 model = Transformer(tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size(), config)
-
-model.to(device)
+model.to(config.device)
 
 criterion = nn.CrossEntropyLoss(ignore_index=0)
 optimizer = torch.optim.Adam(model.parameters(), lr=config.lr, betas=(0.9, 0.98), eps=1e-9)
 
-model.train()
+# MLflow: start logging
+with mlflow.start_run():
 
-for epoch in range(config.num_epochs):
+    # Log config parameters
+    mlflow.log_params({
+        "epochs": config.num_epochs,
+        "learning_rate": config.lr,
+        "batch_size": config.trainBatchSize,
+        "max_seq_length": config.max_seq_length,
+        "source_language": config.sourceLang,
+        "target_language": config.targetLang
+    })
+
+    for epoch in range(config.num_epochs):
         model.train()
         total_loss = 0.0
 
@@ -42,6 +51,7 @@ for epoch in range(config.num_epochs):
             label = batch['label'].to(config.device)
 
             output, _, _ = model(encoder_input, decoder_input, encoder_mask, decoder_mask)
+
             loss = criterion(output.contiguous().view(-1, tokenizer_tgt.get_vocab_size()), label.contiguous().view(-1))
             loss.backward()
             optimizer.step()
@@ -50,11 +60,21 @@ for epoch in range(config.num_epochs):
 
         average_loss = total_loss / len(train_dataloader)
         print(f"Epoch: {epoch + 1}, Loss: {average_loss}")
+        mlflow.log_metric("train_loss", average_loss, step=epoch)
 
         # Save the model at the end of every epoch
-        torch.save(model.state_dict(), f'{config.currentPath}/model/TrainedTransformerModelTranslateing_{config.sourceLang}_to_{config.targetLang}_epoch{epoch + 1}.pt')
+        model_dir = f'{config.currentPath}/model'
+        os.makedirs(model_dir, exist_ok=True)
+        model_path = f'{model_dir}/Transformer_EN_FR_epoch{epoch + 1}.pt'
+        torch.save(model.state_dict(), model_path)
+        mlflow.log_artifact(model_path)
 
-        # Run validation at the end of every epoch
-        helper.validate_model(model, val_dataloader, tokenizer_src, tokenizer_tgt, config)
+        # Validation and log metrics
+        cer, wer, bleu = validate_model(model, val_dataloader, tokenizer_src, tokenizer_tgt, config, log=False)
+        mlflow.log_metrics({
+            "cer": cer,
+            "wer": wer,
+            "bleu": bleu
+        }, step=epoch)
 
 print("Training finished.")
