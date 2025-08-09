@@ -139,7 +139,7 @@ class MultiHeadAttention(nn.Module):
         V = self.v_proj(v).view(batch_size, v_len, self.num_heads, self.head_dim).transpose(1, 2)
         attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.head_dim)
         if mask is not None:
-            attn_scores = attn_scores.masked_fill(mask == 0, float('-inf'))
+            attn_scores = attn_scores.masked_fill(~mask, float('-inf'))
         attn_weights = F.softmax(attn_scores, dim=-1)
         attn_out = torch.matmul(attn_weights, V)
         attn_out = attn_out.transpose(1, 2).contiguous().view(batch_size, q_len, d_model)
