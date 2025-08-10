@@ -67,8 +67,6 @@ def collate_fn(batch):
     tgt_batch = pad_sequence(tgt_batch, padding_value=PAD_IDX)
     return src_batch, tgt_batch
 
-
-
 # ================== Load Data ==================
 csv_train_path = os.path.join(config.DATA_DIR, "opus100_en_fr_train.csv")
 df_train = pd.read_csv(csv_train_path)
@@ -78,12 +76,6 @@ df_test = pd.read_csv(csv_test_path)
 
 csv_val_path = os.path.join(config.DATA_DIR, "opus100_en_fr_val.csv")
 df_val = pd.read_csv(csv_val_path)
-
-
-# ============== Subset (for quick runs) will be removed at the end  ==================
-N = 1000
-df_sample = df_train.head(N)
-print(f"Training on {len(df_sample)} samples (subset).")
 
 # ================== Train & Save Tokenizers (from your data) ==================
 en_tokenizer_path = os.path.join(config.TOK_DIR, "tokenizer_en.json")
@@ -106,7 +98,7 @@ EOS_IDX = en_tok.token_to_id("<eos>")
 assert None not in (UNK_IDX, PAD_IDX, BOS_IDX, EOS_IDX), "Special tokens missing in tokenizer."
 
 # ================== Compute MAX_LEN from tokenized data ==================
-max_src_len = int(df_sample[config.sourceLang].map(lambda s: seq_len_with_specials(s, en_tok)).max())
-max_tgt_len = int(df_sample[config.targetLang].map(lambda s: seq_len_with_specials(s, fr_tok)).max())
+max_src_len = int(df_train[config.sourceLang].map(lambda s: seq_len_with_specials(s, en_tok)).max())
+max_tgt_len = int(df_train[config.targetLang].map(lambda s: seq_len_with_specials(s, fr_tok)).max())
 MAX_LEN = max(max_src_len, max_tgt_len)
 print("Max sequence length (with BOS/EOS):", MAX_LEN)
