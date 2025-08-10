@@ -29,7 +29,7 @@ class Config:
         self.trainBatchSize = 32
         self.valBatchSize = 1
         self.lr = 0.0003
-        self.num_epochs = 3
+        self.num_epochs = 30
 
         for p in [self.DATA_DIR, self.MODELS_DIR, self.TOK_DIR, self.checkpoint_dir]:
             os.makedirs(p, exist_ok=True)

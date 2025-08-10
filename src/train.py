@@ -29,11 +29,6 @@ SRC_VOCAB_SIZE = en_tok.get_vocab_size()
 TGT_VOCAB_SIZE = fr_tok.get_vocab_size()
 print("Vocab sizes:", SRC_VOCAB_SIZE, TGT_VOCAB_SIZE)
 
-# D_MODEL = 256
-# N_HEADS = 4
-# N_LAYERS = 2
-D_FF = 512
-
 model = Transformer(
     SRC_VOCAB_SIZE, TGT_VOCAB_SIZE,
     d_model=config.d_model, n_heads=config.num_heads, num_layers=config.num_layers, d_ff=config.d_ff, max_len=MAX_LEN
