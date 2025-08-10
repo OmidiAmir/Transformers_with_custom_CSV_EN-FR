@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dataloader import PAD_IDX 
+from config import config
 
 # ================== Model ==================
 class PositionalEncoding(nn.Module):
@@ -117,8 +118,8 @@ class Transformer(nn.Module):
         self.src_embedding = nn.Embedding(src_vocab_size, d_model, padding_idx=PAD_IDX)
         self.tgt_embedding = nn.Embedding(tgt_vocab_size, d_model, padding_idx=PAD_IDX)
         self.pos_encoder = PositionalEncoding(d_model, max_len)
-        self.encoder_layers = nn.ModuleList([EncoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(num_layers)])
-        self.decoder_layers = nn.ModuleList([DecoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(num_layers)])
+        self.encoder_layers = nn.ModuleList([EncoderLayer(d_model, n_heads, d_ff, config.dropout) for _ in range(num_layers)])
+        self.decoder_layers = nn.ModuleList([DecoderLayer(d_model, n_heads, d_ff, config.dropout) for _ in range(num_layers)])
         self.fc_out = nn.Linear(d_model, tgt_vocab_size)
     def encode(self, src, src_mask=None):
         # src: [T,B] -> [B,T,D]
