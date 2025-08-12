@@ -33,7 +33,7 @@ def add_bos_eos(ids):
 class TranslationDataset(Dataset):
     def __init__(self, datagroup):
         if datagroup == "train":
-            self.data = df_sample.reset_index(drop=True)
+            self.data = df_train.reset_index(drop=True)
         elif datagroup == "test":
             self.data = df_test.reset_index(drop=True)
         else: 
@@ -47,8 +47,12 @@ class TranslationDataset(Dataset):
     def __getitem__(self, idx):
         src_text = str(self.data.iloc[idx][config.sourceLang])
         tgt_text = str(self.data.iloc[idx][config.targetLang])
-        src_ids = self.en_tok.encode(src_text).ids
-        tgt_ids = self.fr_tok.encode(tgt_text).ids
+        # src_ids = self.en_tok.encode(src_text).ids
+        # tgt_ids = self.fr_tok.encode(tgt_text).ids
+        max_inner_len = max(2, config.max_seq_length - 2)  # room for BOS/EOS
+        src_ids = self.en_tok.encode(src_text).ids[:max_inner_len]
+        tgt_ids = self.fr_tok.encode(tgt_text).ids[:max_inner_len]
+
         src_tensor = torch.tensor(add_bos_eos(src_ids), dtype=torch.long)
         tgt_tensor = torch.tensor(add_bos_eos(tgt_ids), dtype=torch.long)
         return src_tensor, tgt_tensor
@@ -91,14 +95,15 @@ if not (os.path.exists(en_tokenizer_path) and os.path.exists(fr_tokenizer_path))
 en_tok = Tokenizer.from_file(en_tokenizer_path)
 fr_tok = Tokenizer.from_file(fr_tokenizer_path)
 
+max_inner_len = max(2, config.max_seq_length - 2)
+en_tok.enable_truncation(max_inner_len)
+fr_tok.enable_truncation(max_inner_len)
+
 UNK_IDX = en_tok.token_to_id("<unk>")
 PAD_IDX = en_tok.token_to_id("<pad>")
 BOS_IDX = en_tok.token_to_id("<bos>")
 EOS_IDX = en_tok.token_to_id("<eos>")
 assert None not in (UNK_IDX, PAD_IDX, BOS_IDX, EOS_IDX), "Special tokens missing in tokenizer."
 
-# ================== Compute MAX_LEN from tokenized data ==================
-max_src_len = int(df_train[config.sourceLang].map(lambda s: seq_len_with_specials(s, en_tok)).max())
-max_tgt_len = int(df_train[config.targetLang].map(lambda s: seq_len_with_specials(s, fr_tok)).max())
-MAX_LEN = max(max_src_len, max_tgt_len)
+MAX_LEN = int(config.max_seq_length)
 print("Max sequence length (with BOS/EOS):", MAX_LEN)
