@@ -26,7 +26,7 @@ class Config:
         self.num_layers =6         # CHANGED (was 2->6)
         self.d_ff = 2048            # CHANGED (was 512->2048)
         self.dropout = 0.1
-        self.max_seq_length = 128
+        self.max_seq_length = 512
 
         # Training
         self.trainBatchSize = 32
@@ -40,7 +40,7 @@ class Config:
 
         # Inference
         self.beam_size = 4           # ADDED
-        self.max_gen_len = 512       # ADDED
+        self.max_gen_len = 128       # ADDED
 
         for p in [self.DATA_DIR, self.MODELS_DIR, self.TOK_DIR, self.checkpoint_dir]:
             os.makedirs(p, exist_ok=True)

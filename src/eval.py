@@ -5,7 +5,8 @@ from config import config
 from transformerModel import Transformer
 from dataloader import (
     TranslationDataset, collate_fn, en_tok, fr_tok,
-    PAD_IDX, BOS_IDX, EOS_IDX, MAX_LEN
+    SRC_PAD_IDX, SRC_BOS_IDX, SRC_EOS_IDX,
+    TGT_PAD_IDX, TGT_BOS_IDX, TGT_EOS_IDX, MAX_LEN
 )
 
 def _resolve_ckpt(path_or_dir: str) -> str:
@@ -18,11 +19,11 @@ def _resolve_ckpt(path_or_dir: str) -> str:
 
 def _build_model(hp=None):
     SRC_V, TGT_V = en_tok.get_vocab_size(), fr_tok.get_vocab_size()
-    d_model   = hp.get("d_model", config.d_model)   if hp else config.d_model
-    n_heads   = hp.get("n_heads", config.num_heads) if hp else config.num_heads
-    num_layers= hp.get("num_layers", config.num_layers) if hp else config.num_layers
-    d_ff      = hp.get("d_ff", config.d_ff)         if hp else config.d_ff
-    max_len   = hp.get("max_len", MAX_LEN)          if hp else MAX_LEN
+    d_model    = hp.get("d_model", config.d_model)       if hp else config.d_model
+    n_heads    = hp.get("n_heads", config.num_heads)     if hp else config.num_heads
+    num_layers = hp.get("num_layers", config.num_layers) if hp else config.num_layers
+    d_ff       = hp.get("d_ff", config.d_ff)             if hp else config.d_ff
+    max_len    = hp.get("max_len", MAX_LEN)              if hp else MAX_LEN
     return Transformer(SRC_V, TGT_V, d_model=d_model, n_heads=n_heads,
                        num_layers=num_layers, d_ff=d_ff, max_len=max_len).to(config.device)
 
@@ -38,19 +39,19 @@ def _load_model(ckpt_path: str):
 def _ids_to_text(ids1d: torch.Tensor) -> str:
     toks = []
     for i in ids1d.tolist():
-        if i == BOS_IDX: continue
-        if i == EOS_IDX: break
+        if i == TGT_BOS_IDX: continue
+        if i == TGT_EOS_IDX: break
         toks.append(fr_tok.id_to_token(int(i)))
     return " ".join(toks)
 
 @torch.no_grad()
 def _greedy(model, src, max_len):
-    tgt = torch.tensor([[BOS_IDX]], dtype=torch.long, device=src.device)
+    tgt = torch.tensor([[TGT_BOS_IDX]], dtype=torch.long, device=src.device)
     for _ in range(max_len - 1):
         out = model(src, tgt)                 # [Tcur,1,V]
         nid = int(out[-1, 0].argmax(-1).item())
         tgt = torch.cat([tgt, torch.tensor([[nid]], device=src.device)], dim=0)
-        if nid == EOS_IDX: break
+        if nid == TGT_EOS_IDX: break
     return tgt[:, 0]
 
 def main():
@@ -73,7 +74,7 @@ def main():
 
     model = _load_model(ckpt)
 
-    ds = TranslationDataset("test")  # uses df_test from dataloader.py
+    ds = TranslationDataset("test")
     if args.limit is not None:
         from torch.utils.data import Subset
         ds = Subset(ds, list(range(min(args.limit, len(ds)))))
@@ -83,7 +84,7 @@ def main():
         num_workers=2, pin_memory=(config.device.type == "cuda")
     )
 
-    crit = torch.nn.CrossEntropyLoss(ignore_index=PAD_IDX, label_smoothing=getattr(config, "label_smoothing", 0.0))
+    crit = torch.nn.CrossEntropyLoss(ignore_index=TGT_PAD_IDX, label_smoothing=getattr(config, "label_smoothing", 0.0))
     refs, hyps = [], []
     loss_sum, steps = 0.0, 0
 
@@ -91,7 +92,7 @@ def main():
         for src, tgt in tqdm(dl, desc="Eval test"):
             src, tgt = src.to(config.device), tgt.to(config.device)
 
-            # teacher-forced loss
+            # teacher-forced loss (ignore target PAD)
             out = model(src, tgt[:-1, :])  # [T-1,1,V]
             V = out.shape[-1]
             loss_sum += float(crit(out.reshape(-1, V), tgt[1:, :].reshape(-1)).item())

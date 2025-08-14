@@ -47,33 +47,35 @@ class TranslationDataset(Dataset):
     def __getitem__(self, idx):
         src_text = str(self.data.iloc[idx][config.sourceLang])
         tgt_text = str(self.data.iloc[idx][config.targetLang])
-        # src_ids = self.en_tok.encode(src_text).ids
-        # tgt_ids = self.fr_tok.encode(tgt_text).ids
+
         max_inner_len = max(2, config.max_seq_length - 2)  # room for BOS/EOS
         src_ids = self.en_tok.encode(src_text).ids[:max_inner_len]
         tgt_ids = self.fr_tok.encode(tgt_text).ids[:max_inner_len]
+        src_tensor = torch.tensor([SRC_BOS_IDX] + src_ids + [SRC_EOS_IDX], dtype=torch.long)
+        tgt_tensor = torch.tensor([TGT_BOS_IDX] + tgt_ids + [TGT_EOS_IDX], dtype=torch.long)
 
-        src_tensor = torch.tensor(add_bos_eos(src_ids), dtype=torch.long)
-        tgt_tensor = torch.tensor(add_bos_eos(tgt_ids), dtype=torch.long)
         return src_tensor, tgt_tensor
 
 def collate_fn(batch):
-    # drop degenerate pairs just in case
-    batch = [(s, t) for (s, t) in batch if len(s) > 0 and len(t) > 0]
+    # drop degenerate pairs
+    batch = [(s, t) for (s, t) in batch if s.numel() > 0 and t.numel() > 0]
     if not batch:
         batch = [
-            (torch.tensor([BOS_IDX, EOS_IDX], dtype=torch.long),
-             torch.tensor([BOS_IDX, EOS_IDX], dtype=torch.long))
+            (torch.tensor([SRC_BOS_IDX, SRC_EOS_IDX], dtype=torch.long),
+             torch.tensor([TGT_BOS_IDX, TGT_EOS_IDX], dtype=torch.long))
         ]
+
     src_batch, tgt_batch = zip(*batch)
-    # pad_sequence default: batch_first=False -> tensors are [T, B]
-    src_batch = pad_sequence(src_batch, padding_value=PAD_IDX)
-    tgt_batch = pad_sequence(tgt_batch, padding_value=PAD_IDX)
+    # pad_sequence default: batch_first=False -> [T, B]
+    src_batch = pad_sequence(src_batch, padding_value=SRC_PAD_IDX)
+    tgt_batch = pad_sequence(tgt_batch, padding_value=TGT_PAD_IDX)
     return src_batch, tgt_batch
+
 
 # ================== Load Data ==================
 csv_train_path = os.path.join(config.DATA_DIR, "opus100_en_fr_train.csv")
 df_train = pd.read_csv(csv_train_path)
+# df_train = df_train.head(5000)
 
 csv_test_path = os.path.join(config.DATA_DIR, "opus100_en_fr_test.csv")
 df_test = pd.read_csv(csv_test_path)
@@ -99,11 +101,16 @@ max_inner_len = max(2, config.max_seq_length - 2)
 en_tok.enable_truncation(max_inner_len)
 fr_tok.enable_truncation(max_inner_len)
 
-UNK_IDX = en_tok.token_to_id("<unk>")
-PAD_IDX = en_tok.token_to_id("<pad>")
-BOS_IDX = en_tok.token_to_id("<bos>")
-EOS_IDX = en_tok.token_to_id("<eos>")
-assert None not in (UNK_IDX, PAD_IDX, BOS_IDX, EOS_IDX), "Special tokens missing in tokenizer."
+SRC_UNK_IDX = en_tok.token_to_id("<unk>")
+SRC_PAD_IDX = en_tok.token_to_id("<pad>")
+SRC_BOS_IDX = en_tok.token_to_id("<bos>")
+SRC_EOS_IDX = en_tok.token_to_id("<eos>")
+# Target (FR)
+TGT_UNK_IDX = fr_tok.token_to_id("<unk>")
+TGT_PAD_IDX = fr_tok.token_to_id("<pad>")
+TGT_BOS_IDX = fr_tok.token_to_id("<bos>")
+TGT_EOS_IDX = fr_tok.token_to_id("<eos>")
+assert None not in (SRC_UNK_IDX, SRC_PAD_IDX, SRC_BOS_IDX, SRC_EOS_IDX, TGT_UNK_IDX, TGT_PAD_IDX, TGT_BOS_IDX, TGT_EOS_IDX), "Special tokens missing."
 
 MAX_LEN = int(config.max_seq_length)
 print("Max sequence length (with BOS/EOS):", MAX_LEN)

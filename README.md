@@ -1,89 +1,182 @@
-#   English–French Translation with Transformers + MLOps
-This project builds an end-to-end English-to-French neural machine translation system using a custom Transformer architecture in PyTorch. It includes dataset preparation, tokenizer training, model training, and MLOps components like MLflow, Docker, and API deployment.
+# English–French Neural Machine Translation with Transformers
 
+## Overview
+This project is a **research-style demonstration** of a custom Transformer-based neural machine translation (NMT) model implemented from scratch in **PyTorch**.  
+It builds an **end-to-end English-to-French translation system** that includes:
 
-## 📥 Dataset
-This project uses the `opus_books` English–French dataset from Hugging Face.
+- Dataset preparation from the **OPUS-100 corpus**
+- Word-level tokenizer training (with special tokens)
+- Custom Transformer encoder–decoder architecture
+- Advanced training features:
+  - Label smoothing
+  - Noam learning rate schedule with warmup
+  - Mixed precision training (AMP)
+  - Gradient clipping
+  - Early stopping
+- Evaluation with BLEU and chrF scores
+- Beam search and greedy decoding for inference
+- Checkpointing for every epoch and best model selection
 
-To download and save a 10k-sample CSV:
-```bash
-python ./src/data/download_dataset.py
-```
-
-Saved to: data/opus_books_en_fr.csv
+The goal is to provide a **complete, reproducible, and educational** NMT pipeline that is useful both for understanding Transformer internals and as a portfolio example.
 
 ---
 
-## 🔠 Tokenization
-The project uses a custom WordLevel tokenizer (trained from scratch) for both English and French.
+## Dataset
+- **Name**: [OPUS-100 corpus](https://opus.nlpl.eu/opus-100.php)  
+- **Languages**: English → French  
+- **Content**: 100 languages translated to/from English; here we use the full English–French subset  
+- **Size**: Entire available dataset used (train/dev/test splits)  
+- **Format**: Plain-text `.en` / `.fr` sentence pairs converted to CSV
 
-To train and save the tokenizers:
-
+### Preparing the CSV files
+Raw OPUS-100 text files in `data/en-fr/` are converted to CSV with:
 ```bash
-python ./src/data/train_tokenizers.py
-````
-This will generate two files:
-- tokenizers/tokenizer_en.json
-- tokenizers/tokenizer_fr.json
-
-To verify the tokenizers work, run:
-
+python src/sourceData2CSV.py
+```
+This creates:
 ```bash
-pytest tests/test_train_tokenizers.py
+data/opus100_en_fr_train.csv
+data/opus100_en_fr_val.csv
+data/opus100_en_fr_test.csv
+```
+--- 
+
+## Modle
+### A custom implementation of the Transformer architecture with:
+- Embedding dimension (d_model): 512
+- Feed-forward dimension (d_ff): 2048
+- Heads: 8
+- Layers: 6 encoder + 6 decoder
+- Dropout: 0.1
+- Max sequence length: 512 tokens
+- Beam size (inference): 4 by default
+### Key Features
+- Positional Encoding: Sinusoidal, auto-extended if needed
+- Multi-Head Attention: Custom implementation
+- Feed-Forward Network: Two-layer ReLU + dropout
+- Masking:
+  - Key padding mask
+  - Subsequent mask for decoder
+- Loss: CrossEntropy with label smoothing (0.1)
+
+--- 
+## Installation
+### 1-  Clone the repository
+```bash
+git clone https://github.com/your-username/translation_EN-FR.git
+cd translation_EN-FR
 ```
 
-
-
-## 🧠 Transformer Model
-This project implements a custom Transformer model from scratch based on the "Attention Is All You Need" paper.  
-It includes:
-
-- Multi-head self-attention mechanism
-- Sinusoidal positional encoding
-- Encoder and decoder layers with LayerNorm, residual connections, and dropout
-- Custom masking for source and target sequences
-
-The model is defined in `src/models/transformer_model.py`.
-
-To run the unit test:
-
-```bash
-pytest tests/test_transformer_model.py
-``` 
-The test checks:
-
-- Model instantiation
-- Forward pass with dummy data
-- Output shapes match expectations
-
-## 🏋️‍♂️ Training
-Once the data and tokenizer are ready, you can start training the Transformer model:
-
-```bash
-python src/training/train.py
+### 2- Create and activate a virtual environment
+``` bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
 ```
 
-This will:
-- Train the Transformer model for N epochs
-- Save model checkpoints to ./model/
-- Run validation using BLEU, CER, and WER metrics
-
-
-
-## 📊 Experiment Tracking (MLflow)
-_(Coming soon)_
-
-## 🚀 Deployment (API)
-_(Coming soon)_
-
-## 📦 Installation
-```bash
+### 3- Install dependencies
+``` bash
 pip install -r requirements.txt
-``` 
----
-## 💻 How to Run
-_(Coming soon)_
+```
 
-## 📈 Results
-_(Coming soon)_
+#### Tested with:|
+- Python ≥ 3.10
+- PyTorch 2.2.0
+- CUDA 12.1+ (GPU recommended)
+
+---
+
+## Training
+Run: 
+```bash
+python src/train.py
+```
+
+What it does:
+- Loads CSV data
+- Trains English & French tokenizers (WordLevel, vocab size = 32000)
+- Builds Transformer model
+- Trains for up to 30 epochs (early stopping if no val loss improvement for 5 epochs)
+- Saves:
+    - Per-epoch checkpoints in `models/`
+    - Best checkpoint in `checkpoints/best.pt`
+    - Final model in `models/transformer_attention_final.pt`
+
+--- 
+
+## Evlaluation
+```bash
+python src/eval.py
+````
+Computes:
+- Validation loss
+- Perplexity (PPL)
+- Token accuracy
+- BLEU score
+- chrF2 score (if `sacrebleu` is installed)
+
+--- 
  
+## inference 
+``` bash
+python src/infer.py --src "This is a test sentence."
+
+```
+### Optional flags:
+- ckpt: Path to checkpoint (.pt file or directory)
+- beam: Beam size for decoding (default from config)
+- max_len: Maximum output sequence length
+
+Example:
+``` bahs
+python src/infer.py --src "Machine translation is fascinating." --beam 4
+```
+
+## Project structure
+```php
+translation_EN-FR/
+├── checkpoints/              # Best model checkpoint
+├── data/                      # Dataset and processed CSVs
+│   ├── en-fr/                 # Raw OPUS100 files
+│   ├── opus100_en_fr_train.csv
+│   ├── opus100_en_fr_val.csv
+│   ├── opus100_en_fr_test.csv
+├── models/                    # Saved model checkpoints per epoch + final
+├── src/                       # Source code
+│   ├── config.py              # Hyperparameters & paths
+│   ├── dataloader.py          # Tokenizer training & dataset class
+│   ├── sourceData2CSV.py      # Converts raw data to CSV
+│   ├── transformerModel.py    # Transformer architecture
+│   ├── train.py               # Training loop
+│   ├── eval.py                # Evaluation loop
+│   ├── infer.py               # Inference (beam/greedy)
+├── tokenizerfiles/            # Saved tokenizers
+├── requirements.txt           # Dependencies
+└── README.md                  # This file
+```
+
+---
+
+## Results
+
+<<<(To be updated once training completes — include BLEU, chrF2, and token accuracy)>>>
+
+``` ymal
+- Val Loss: 2.35
+- Val PPL: 10.48
+- Val Token Accuracy: 0.78
+- Val BLEU: 32.5
+- Val chrF2: 55.2
+```
+
+---
+
+## Achnowlegdement
+- OPUS-100 dataset 
+- PyTorch
+- Parts of the code and design inspired by discussions with ChatGPT.
+
+
+
+
+
