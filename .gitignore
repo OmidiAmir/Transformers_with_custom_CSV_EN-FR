@@ -7,8 +7,8 @@ models/
 models/*.*
 
 # data
-data/ 
 *.csv
+*.en
 *.fr
 
 # PyTorch checkpoints and artifacts
