@@ -154,7 +154,11 @@ translation_EN-FR/
 ├── requirements.txt           # Dependencies
 └── README.md                  # This file
 ```
-
+### Repository Size Notice
+The `data/` and `models/` directories are not synced to GitHub due to large file sizes and repository space limitations.
+To reproduce results:
+- Download the OPUS-100 English–French dataset manually from OPUS-100 and place it in `data/en-fr/`
+- Models will be created automatically during training and saved in `models/` and `c`heckpoints/`
 ---
 
 ## Results
@@ -162,11 +166,11 @@ translation_EN-FR/
 <<<(To be updated once training completes — include BLEU, chrF2, and token accuracy)>>>
 
 ``` ymal
-- Val Loss: 2.35
-- Val PPL: 10.48
-- Val Token Accuracy: 0.78
-- Val BLEU: 32.5
-- Val chrF2: 55.2
+- Val Loss: ??
+- Val PPL: ??
+- Val Token Accuracy: ??
+- Val BLEU: ??
+- Val chrF2: ??
 ```
 
 ---
